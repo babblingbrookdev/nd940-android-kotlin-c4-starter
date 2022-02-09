@@ -1,7 +1,9 @@
 package com.udacity.project4
 
 import android.app.Application
+import com.udacity.project4.locationreminders.data.AuthDataSource
 import com.udacity.project4.locationreminders.data.ReminderDataSource
+import com.udacity.project4.locationreminders.data.auth.AuthRepository
 import com.udacity.project4.locationreminders.data.local.LocalDB
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
@@ -24,7 +26,8 @@ class MyApp : Application() {
             viewModel {
                 RemindersListViewModel(
                     get(),
-                    get() as ReminderDataSource
+                    get() as ReminderDataSource,
+                    get() as AuthDataSource
                 )
             }
             //Declare singleton definitions to be later injected using by inject()
@@ -36,6 +39,7 @@ class MyApp : Application() {
                 )
             }
             single { RemindersLocalRepository(get()) as ReminderDataSource }
+            single { AuthRepository() as AuthDataSource }
             single { LocalDB.createRemindersDao(this@MyApp) }
         }
 
