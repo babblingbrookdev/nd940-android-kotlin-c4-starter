@@ -3,7 +3,9 @@ package com.udacity.project4.locationreminders
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.navigation.findNavController
+import com.google.android.material.snackbar.Snackbar
 import com.udacity.project4.R
 
 /**

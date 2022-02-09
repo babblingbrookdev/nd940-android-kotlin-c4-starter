@@ -1,5 +1,6 @@
 package com.udacity.project4.locationreminders.reminderslist
 
+import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.os.Bundle
 import android.view.*
@@ -8,11 +9,11 @@ import androidx.databinding.DataBindingUtil
 import com.firebase.ui.auth.AuthMethodPickerLayout
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
-import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentRemindersBinding
+import com.udacity.project4.locationreminders.RemindersActivity
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import com.udacity.project4.utils.setTitle
 import com.udacity.project4.utils.setup
@@ -45,7 +46,7 @@ class ReminderListFragment : BaseFragment() {
 
         signInLauncher = registerForActivityResult(
             FirebaseAuthUIActivityResultContract()
-        ) { result: FirebaseAuthUIAuthenticationResult? -> }
+        ) { }
 
         val customLayout = AuthMethodPickerLayout
             .Builder(R.layout.authui_authentication)
