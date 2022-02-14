@@ -11,12 +11,12 @@ import androidx.databinding.DataBindingUtil
 import com.google.android.gms.location.Geofence
 import com.google.android.gms.location.GeofencingClient
 import com.google.android.gms.location.GeofencingRequest
-import com.google.android.gms.maps.model.PointOfInterest
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSaveReminderBinding
 import com.udacity.project4.locationreminders.geofence.GeofenceBroadcastReceiver
+import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.Permission
 import com.udacity.project4.utils.PermissionManager
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
@@ -34,7 +34,6 @@ class SaveReminderFragment : BaseFragment() {
 
     private val geofencePendingIntent: PendingIntent by lazy {
         val intent = Intent(requireActivity(), GeofenceBroadcastReceiver::class.java)
-
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
             PendingIntent.getBroadcast(
                 requireActivity(),
@@ -69,7 +68,6 @@ class SaveReminderFragment : BaseFragment() {
         return binding.root
     }
 
-    @SuppressLint("MissingPermission")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         binding.lifecycleOwner = this
@@ -80,23 +78,25 @@ class SaveReminderFragment : BaseFragment() {
 
         binding.saveReminder.setOnClickListener {
             if (_viewModel.validateEnteredData()) {
-                addGeofence(_viewModel.selectedPOI.value)
+                addGeofence(_viewModel.getReminder())
             }
         }
     }
 
-    private fun addGeofence(poi: PointOfInterest?) {
-        poi?.let {
+    private fun addGeofence(reminder: ReminderDataItem?) {
+        reminder?.let {
             permissionManager.request(Permission.ForegroundLocation)
                 .rationale(getString(R.string.permission_denied_explanation))
                 .checkPermission { granted ->
                     if (granted) {
-                        val geofence = Geofence.Builder()
-                            .setRequestId(poi.placeId)
-                            .setCircularRegion(poi.latLng.latitude, poi.latLng.longitude, 300f)
-                            .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                            .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                            .build()
+                        val geofence =
+                            Geofence.Builder()
+                                .setRequestId(reminder.id)
+                                .setCircularRegion(reminder.latitude!!, reminder.longitude!!, 300f)
+                                .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                                .build()
+
                         val request = GeofencingRequest.Builder().apply {
                             setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
                                 .addGeofence(geofence)
@@ -116,7 +116,6 @@ class SaveReminderFragment : BaseFragment() {
                         _viewModel.showSnackBarInt.value = R.string.location_required_error
                     }
                 }
-
         }
     }
 
