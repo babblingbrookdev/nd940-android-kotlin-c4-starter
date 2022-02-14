@@ -125,7 +125,7 @@ class SelectLocationFragment : BaseFragment() {
                  * once background permissions are approved, finally we can navigate
                  */
                 is SelectLocationUIEvent.BackgroundPermissionsApproved -> {
-                    _viewModel.navigateToSaveReminder()
+                    _viewModel.navigateBack()
                 }
             }
         }
