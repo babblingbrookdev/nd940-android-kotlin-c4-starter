@@ -24,6 +24,7 @@ import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.awaitMap
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
+import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.Permission
@@ -58,17 +59,16 @@ class SelectLocationFragment : BaseFragment() {
         setDisplayHomeAsUpEnabled(true)
 
         viewLifecycleOwner.lifecycleScope.launch {
-            _viewModel.processEvent(SelectLocationEvent.MapLoading(true))
+            _viewModel.showLoading.postValue(true)
 
             // initialize map
             val mapFragment: SupportMapFragment =
                 childFragmentManager.findFragmentById(R.id.map_fragment) as SupportMapFragment
             map = mapFragment.awaitMap()
 
-            _viewModel.processEvent(SelectLocationEvent.MapLoading(false))
+            _viewModel.showLoading.postValue(false)
             setMapStyle()
             setupListeners()
-            observeUIEvents()
 
             // we need foreground location permissions first
             // for basic functionality
@@ -80,54 +80,10 @@ class SelectLocationFragment : BaseFragment() {
 
     private fun setupListeners() {
         map.setOnPoiClickListener { poi ->
-            _viewModel.processEvent(SelectLocationEvent.PoiSelected(poi))
+            _viewModel.onPoiSelected(poi)
         }
         binding.saveButton.setOnClickListener {
-            _viewModel.processEvent(SelectLocationEvent.SaveButtonClicked)
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    private fun observeUIEvents() {
-        // observe selectedPOI directly to be notified again on
-        // configuration change so we can re-set the marker
-        _viewModel.selectedPOI.observe(viewLifecycleOwner) { selectedPoi ->
-            selectedPoi?.let {
-                addMarker(it)
-                moveCamera(it.latLng)
-            }
-        }
-        // one shot UI Events sent from the viewmodel to handle
-        _viewModel.uiEvent.observe(viewLifecycleOwner) { uiEvent ->
-            when (uiEvent) {
-                /**
-                 * once foreground permissions are approved, check that
-                 *   that the user has location settings enabled
-                 */
-                is SelectLocationUIEvent.ForegroundPermissionsApproved -> {
-                    checkDeviceLocationSettings()
-                }
-                /**
-                 *   once we have ensured that device location is active
-                 *   we can now get current location and move the map
-                 */
-                is SelectLocationUIEvent.DeviceLocationEnabled -> {
-                    getLocation()
-                }
-                /**
-                 *  we need background permissions to setup the geofence so
-                 *   request it now
-                 */
-                is SelectLocationUIEvent.SaveClicked -> {
-                    requestBackgroundPermissions()
-                }
-                /**
-                 * once background permissions are approved, finally we can navigate
-                 */
-                is SelectLocationUIEvent.BackgroundPermissionsApproved -> {
-                    _viewModel.navigateBack()
-                }
-            }
+            requestBackgroundPermissions()
         }
     }
 
@@ -178,9 +134,9 @@ class SelectLocationFragment : BaseFragment() {
             .rationale(getString(R.string.permission_denied_explanation))
             .checkPermission { granted ->
                 if (granted) {
-                    _viewModel.processEvent(SelectLocationEvent.ForegroundPermissionsApproved)
+                    checkDeviceLocationSettings()
                 } else {
-                    _viewModel.processEvent((SelectLocationEvent.ForegroundPermissionsDenied))
+                    _viewModel.showSnackBarInt.value = R.string.location_required_error
                 }
             }
     }
@@ -192,11 +148,9 @@ class SelectLocationFragment : BaseFragment() {
                 .rationale(getString(R.string.permission_denied_explanation))
                 .checkPermission { granted ->
                     if (granted) {
-                        _viewModel.processEvent(
-                            SelectLocationEvent.BackgroundPermissionsApproved
-                        )
+                        _viewModel.navigationCommand.value = NavigationCommand.Back
                     } else {
-                        _viewModel.processEvent(SelectLocationEvent.BackgroundPermissionsDenied)
+                        _viewModel.showSnackBarInt.value = R.string.location_required_error
                     }
                 }
         }
@@ -226,7 +180,7 @@ class SelectLocationFragment : BaseFragment() {
         }
         locationSettingsResponseTask.addOnCompleteListener {
             map.isMyLocationEnabled = true
-            _viewModel.processEvent(SelectLocationEvent.DeviceLocationEnabled)
+            getLocation()
         }
     }
 

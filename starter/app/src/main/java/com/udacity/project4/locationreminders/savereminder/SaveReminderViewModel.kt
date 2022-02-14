@@ -10,15 +10,10 @@ import com.udacity.project4.base.BaseViewModel
 import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
-import com.udacity.project4.locationreminders.savereminder.selectreminderlocation.SelectLocationEvent
-import com.udacity.project4.locationreminders.savereminder.selectreminderlocation.SelectLocationUIEvent
-import com.udacity.project4.utils.SingleLiveEvent
 import kotlinx.coroutines.launch
 
 class SaveReminderViewModel(val app: Application, private val dataSource: ReminderDataSource) :
     BaseViewModel(app) {
-
-    val uiEvent = SingleLiveEvent<SelectLocationUIEvent>()
 
     val reminderTitle = MutableLiveData<String?>()
     val reminderDescription = MutableLiveData<String?>()
@@ -88,40 +83,11 @@ class SaveReminderViewModel(val app: Application, private val dataSource: Remind
         return true
     }
 
-    fun processEvent(event: SelectLocationEvent) {
-        when(event) {
-            is SelectLocationEvent.SaveButtonClicked -> {
-                sendUiEvent(SelectLocationUIEvent.SaveClicked)
-            }
-            is SelectLocationEvent.PoiSelected -> {
-                _selectedPOI.value = event.poi
-                reminderSelectedLocationStr.value = event.poi.name
-                latitude.value = event.poi.latLng.latitude
-                longitude.value = event.poi.latLng.longitude
-            }
-            is SelectLocationEvent.DeviceLocationEnabled -> {
-                sendUiEvent(SelectLocationUIEvent.DeviceLocationEnabled)
-            }
-            is SelectLocationEvent.ForegroundPermissionsApproved -> {
-                sendUiEvent(SelectLocationUIEvent.ForegroundPermissionsApproved)
-            }
-            is SelectLocationEvent.BackgroundPermissionsApproved -> {
-                sendUiEvent(SelectLocationUIEvent.BackgroundPermissionsApproved)
-            }
-            is SelectLocationEvent.ForegroundPermissionsDenied -> {
-                showSnackBarInt.value = R.string.location_required_error
-            }
-            is SelectLocationEvent.BackgroundPermissionsDenied-> {
-                showSnackBarInt.value = R.string.location_required_error
-            }
-            is SelectLocationEvent.MapLoading -> {
-                showLoading.value = event.loading
-            }
-        }
-    }
-
-    private fun sendUiEvent(event: SelectLocationUIEvent) {
-        uiEvent.value = event
+    fun onPoiSelected(poi: PointOfInterest) {
+        _selectedPOI.value = poi
+        reminderSelectedLocationStr.value = poi.name
+        latitude.value = poi.latLng.latitude
+        longitude.value = poi.latLng.longitude
     }
 
     fun navigateBack() {
