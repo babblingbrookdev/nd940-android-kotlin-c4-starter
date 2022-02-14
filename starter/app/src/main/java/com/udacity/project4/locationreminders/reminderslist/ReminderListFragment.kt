@@ -81,12 +81,9 @@ class ReminderListFragment : BaseFragment() {
                 launchSignInFlow()
             }
         }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        //load the reminders list on the ui
-        _viewModel.loadReminders()
+        _viewModel.showLoading.observe(viewLifecycleOwner) { loading ->
+            binding.refreshLayout.isRefreshing = loading
+        }
     }
 
     private fun navigateToAddReminder() {
