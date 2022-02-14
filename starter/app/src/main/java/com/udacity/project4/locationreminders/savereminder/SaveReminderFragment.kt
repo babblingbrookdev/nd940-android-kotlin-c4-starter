@@ -36,9 +36,19 @@ class SaveReminderFragment : BaseFragment() {
         val intent = Intent(requireActivity(), GeofenceBroadcastReceiver::class.java)
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
-            PendingIntent.getBroadcast(requireActivity(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+            PendingIntent.getBroadcast(
+                requireActivity(),
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
         } else {
-            PendingIntent.getBroadcast(requireActivity(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            PendingIntent.getBroadcast(
+                requireActivity(),
+                0,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT
+            )
         }
     }
 
@@ -69,8 +79,9 @@ class SaveReminderFragment : BaseFragment() {
         }
 
         binding.saveReminder.setOnClickListener {
-            _viewModel.validateAndSaveReminder()
-            addGeofence(_viewModel.selectedPOI.value)
+            if (_viewModel.validateEnteredData()) {
+                addGeofence(_viewModel.selectedPOI.value)
+            }
         }
     }
 
@@ -91,8 +102,14 @@ class SaveReminderFragment : BaseFragment() {
                                 .addGeofence(geofence)
                         }.build()
                         geofencingClient.addGeofences(request, geofencePendingIntent).run {
-                            addOnSuccessListener { _viewModel.navigateBack() }
-                            addOnFailureListener { _viewModel.showErrorMessage.value = "Adding geofence failed, please try again." }
+                            addOnSuccessListener {
+                                _viewModel.saveReminder()
+                                _viewModel.showSnackBarInt.value = R.string.reminder_saved
+                            }
+                            addOnFailureListener {
+                                _viewModel.showSnackBarInt.value =
+                                    R.string.error_adding_geofence
+                            }
                         }
                     } else {
                         logcat { "No permissions to add geofence" }

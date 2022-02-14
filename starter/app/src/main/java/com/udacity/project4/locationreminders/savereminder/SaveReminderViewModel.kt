@@ -38,15 +38,6 @@ class SaveReminderViewModel(val app: Application, private val dataSource: Remind
     }
 
     /**
-     * Validate the entered data then saves the reminder data to the DataSource
-     */
-    fun validateAndSaveReminder() {
-        if (validateEnteredData()) {
-            saveReminder()
-        }
-    }
-
-    /**
      * Save the reminder to the data source
      */
     fun saveReminder() {
@@ -70,7 +61,7 @@ class SaveReminderViewModel(val app: Application, private val dataSource: Remind
     /**
      * Validate the entered data and show error to the user if there's any invalid data
      */
-    private fun validateEnteredData(): Boolean {
+    fun validateEnteredData(): Boolean {
         if (reminderTitle.value.isNullOrEmpty()) {
             showSnackBarInt.value = R.string.err_enter_title
             return false
