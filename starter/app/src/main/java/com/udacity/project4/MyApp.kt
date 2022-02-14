@@ -8,6 +8,7 @@ import com.udacity.project4.locationreminders.data.local.LocalDB
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
 import com.udacity.project4.locationreminders.reminderslist.RemindersListViewModel
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
+import logcat.AndroidLogcatLogger
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
@@ -17,6 +18,7 @@ class MyApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AndroidLogcatLogger.installOnDebuggableApp(this)
 
         /**
          * use Koin Library as a service locator
@@ -31,7 +33,7 @@ class MyApp : Application() {
                 )
             }
             //Declare singleton definitions to be later injected using by inject()
-            single {
+            viewModel {
                 //This view model is declared singleton to be used across multiple fragments
                 SaveReminderViewModel(
                     get(),

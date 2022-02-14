@@ -116,4 +116,7 @@ dependencies {
     implementation "com.google.android.gms:play-services-location:$playServicesVersion"
     implementation "com.google.android.gms:play-services-maps:$playServicesMapsVersion"
     implementation "com.google.android.gms:play-services-auth:20.1.0"
+    implementation 'com.google.maps.android:maps-ktx:3.2.1'
+    implementation 'com.squareup.logcat:logcat:0.1'
+
 }

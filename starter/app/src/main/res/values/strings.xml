@@ -34,6 +34,10 @@
     <string name="err_enter_title">Please enter title</string>
     <string name="err_select_location">Please select location</string>
 
+    <!-- permission rationale dialog strings -->
+    <string name="dialog_permission_title">Permissions needed</string>
+    <string name="dialog_permission_button_positive">OK</string>
+
     <!-- Error strings -->
     <string name="geofence_unknown_error">Unknown error: the Geofence service is not available now.</string>
     <string name="geofence_not_available">Geofence service is not available now. Go to Settings>Location>Mode and choose High accuracy.</string>

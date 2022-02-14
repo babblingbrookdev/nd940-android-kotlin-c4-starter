@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.savereminder
 
 import android.app.Application
+import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.PointOfInterest
@@ -10,25 +11,34 @@ import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
+import com.udacity.project4.locationreminders.savereminder.selectreminderlocation.SelectLocationEvent
+import com.udacity.project4.locationreminders.savereminder.selectreminderlocation.SelectLocationUIEvent
+import com.udacity.project4.utils.SingleLiveEvent
 import kotlinx.coroutines.launch
 
 class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSource) :
     BaseViewModel(app) {
-    val reminderTitle = MutableLiveData<String>()
-    val reminderDescription = MutableLiveData<String>()
-    val reminderSelectedLocationStr = MutableLiveData<String>()
-    val selectedPOI = MutableLiveData<PointOfInterest>()
-    val latitude = MutableLiveData<Double>()
-    val longitude = MutableLiveData<Double>()
+
+    val uiEvent = SingleLiveEvent<SelectLocationUIEvent>()
+
+    val reminderTitle = MutableLiveData<String?>()
+    val reminderDescription = MutableLiveData<String?>()
+    val reminderSelectedLocationStr = MutableLiveData<String?>()
+
+    val latitude = MutableLiveData<Double?>()
+    val longitude = MutableLiveData<Double?>()
+
+    private val _selectedPOI = MutableLiveData<PointOfInterest?>()
+    val selectedPOI: LiveData<PointOfInterest?> get() = _selectedPOI
 
     /**
      * Clear the live data objects to start fresh next time the view model gets called
      */
     fun onClear() {
+        _selectedPOI.value = null
         reminderTitle.value = null
         reminderDescription.value = null
         reminderSelectedLocationStr.value = null
-        selectedPOI.value = null
         latitude.value = null
         longitude.value = null
     }
@@ -78,5 +88,45 @@ class SaveReminderViewModel(val app: Application, val dataSource: ReminderDataSo
             return false
         }
         return true
+    }
+
+    fun processEvent(event: SelectLocationEvent) {
+        when(event) {
+            is SelectLocationEvent.SaveButtonClicked -> {
+                sendUiEvent(SelectLocationUIEvent.SaveClicked)
+            }
+            is SelectLocationEvent.PoiSelected -> {
+                _selectedPOI.value = event.poi
+                reminderSelectedLocationStr.value = event.poi.name
+                latitude.value = event.poi.latLng.latitude
+                longitude.value = event.poi.latLng.longitude
+            }
+            is SelectLocationEvent.DeviceLocationEnabled -> {
+                sendUiEvent(SelectLocationUIEvent.DeviceLocationEnabled)
+            }
+            is SelectLocationEvent.ForegroundPermissionsApproved -> {
+                sendUiEvent(SelectLocationUIEvent.ForegroundPermissionsApproved)
+            }
+            is SelectLocationEvent.BackgroundPermissionsApproved -> {
+                sendUiEvent(SelectLocationUIEvent.BackgroundPermissionsApproved)
+            }
+            is SelectLocationEvent.ForegroundPermissionsDenied -> {
+                showSnackBarInt.value = R.string.location_required_error
+            }
+            is SelectLocationEvent.BackgroundPermissionsDenied-> {
+                showSnackBarInt.value = R.string.location_required_error
+            }
+            is SelectLocationEvent.MapLoading -> {
+                showLoading.value = event.loading
+            }
+        }
+    }
+
+    private fun sendUiEvent(event: SelectLocationUIEvent) {
+        uiEvent.value = event
+    }
+
+    fun navigateToSaveReminder() {
+        navigationCommand.value = NavigationCommand.Back
     }
 }
