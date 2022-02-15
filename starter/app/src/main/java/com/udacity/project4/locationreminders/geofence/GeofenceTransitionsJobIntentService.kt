@@ -4,7 +4,9 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.JobIntentService
 import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofenceStatusCodes
 import com.google.android.gms.location.GeofencingEvent
+import com.udacity.project4.R
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
 import com.udacity.project4.locationreminders.data.local.RemindersLocalRepository
@@ -36,7 +38,8 @@ class GeofenceTransitionsJobIntentService : JobIntentService(), CoroutineScope {
     override fun onHandleWork(intent: Intent) {
         val geofenceEvent = GeofencingEvent.fromIntent(intent)
         if (geofenceEvent.hasError()) {
-            logcat { "$geofenceEvent.errorCode" }
+            logcat { getErrorMessageForCode(geofenceEvent.errorCode) }
+            return
         }
 
         if (geofenceEvent.geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER) {
@@ -68,6 +71,15 @@ class GeofenceTransitionsJobIntentService : JobIntentService(), CoroutineScope {
                     )
                 )
             }
+        }
+    }
+
+    private fun getErrorMessageForCode(code: Int): String {
+        return when (code) {
+            GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE -> getString(R.string.geofence_not_available)
+            GeofenceStatusCodes.GEOFENCE_TOO_MANY_GEOFENCES -> getString(R.string.geofence_too_many_geofences)
+            GeofenceStatusCodes.GEOFENCE_TOO_MANY_PENDING_INTENTS -> getString(R.string.geofence_too_many_pending_intents)
+            else -> getString(R.string.geofence_unknown_error)
         }
     }
 

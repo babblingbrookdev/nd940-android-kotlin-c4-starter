@@ -69,6 +69,7 @@ class SelectLocationFragment : BaseFragment() {
             _viewModel.showLoading.postValue(false)
             setMapStyle()
             setupListeners()
+            setupObservers()
 
             // we need foreground location permissions first
             // for basic functionality
@@ -84,6 +85,14 @@ class SelectLocationFragment : BaseFragment() {
         }
         binding.saveButton.setOnClickListener {
             requestBackgroundPermissions()
+        }
+    }
+
+    private fun setupObservers() {
+        _viewModel.selectedPOI.observe(viewLifecycleOwner) { poi ->
+            poi?.let {
+                addMarker(it)
+            }
         }
     }
 
@@ -215,6 +224,7 @@ class SelectLocationFragment : BaseFragment() {
             title(selectedPoi.name)
             position(selectedPoi.latLng)
         }
+        moveCamera(selectedPoi.latLng)
     }
 
     private fun moveCamera(latLng: LatLng) {

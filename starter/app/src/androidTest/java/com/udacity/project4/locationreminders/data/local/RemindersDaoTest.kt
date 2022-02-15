@@ -18,6 +18,7 @@ import org.hamcrest.CoreMatchers.notNullValue
 import org.hamcrest.MatcherAssert.assertThat
 import org.junit.After
 import org.junit.Test
+import java.time.Instant
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -25,6 +26,53 @@ import org.junit.Test
 @SmallTest
 class RemindersDaoTest {
 
-//    TODO: Add testing implementation to the RemindersDao.kt
+    @get:Rule
+    var instantTaskExecutorRule = InstantTaskExecutorRule()
 
+    private lateinit var remindersDatabase: RemindersDatabase
+    private lateinit var reminder: ReminderDTO
+
+    @Before
+    fun setup() {
+        remindersDatabase = Room.inMemoryDatabaseBuilder(
+            ApplicationProvider.getApplicationContext(),
+            RemindersDatabase::class.java
+        ).allowMainThreadQueries().build()
+        reminder = ReminderDTO(
+            title = "Test title",
+            description = "Test description",
+            location = "Test location",
+            latitude = 1.0,
+            longitude = 2.0
+        )
+    }
+
+    @After
+    fun clear() {
+        remindersDatabase.close()
+    }
+
+    @Test
+    fun insertReminderAndGetById() = runBlockingTest {
+        remindersDatabase.reminderDao().saveReminder(reminder)
+
+        val loaded = remindersDatabase.reminderDao().getReminderById(reminder.id)
+
+        assertThat<ReminderDTO>(loaded as ReminderDTO, notNullValue())
+        assertThat(loaded.id, `is`(reminder.id))
+        assertThat(loaded.description, `is`(reminder.description))
+        assertThat(loaded.location, `is`(reminder.location))
+        assertThat(loaded.latitude, `is`(reminder.latitude))
+        assertThat(loaded.longitude, `is`(reminder.longitude))
+    }
+
+    @Test
+    fun deleteAllReminders() = runBlockingTest {
+        remindersDatabase.reminderDao().saveReminder(reminder)
+        remindersDatabase.reminderDao().deleteAllReminders()
+
+        val reminders = remindersDatabase.reminderDao().getReminders()
+
+        assertThat(reminders.size, `is`(0))
+    }
 }
