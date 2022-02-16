@@ -1,6 +1,5 @@
 package com.udacity.project4.locationreminders.data
 
-import androidx.lifecycle.MutableLiveData
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.data.dto.Result
 
@@ -27,12 +26,16 @@ class FakeReminderDataSource : ReminderDataSource {
     }
 
     override suspend fun getReminder(id: String): Result<ReminderDTO> {
-        val result = fakeData.find { it.id == id }
-        return if (result != null) {
-            Result.Success(result)
-        } else {
-            Result.Error("No reminder with id $id")
+        if (shouldReturnError) {
+            return Result.Error("Test exception")
         }
+        val reminder: ReminderDTO? = fakeData.firstOrNull {
+            it.id == id
+        }
+        reminder?.let {
+            return Result.Success(reminder)
+        }
+        return Result.Error("Reminder with id: $id not found")
     }
 
     override suspend fun deleteAllReminders() {
