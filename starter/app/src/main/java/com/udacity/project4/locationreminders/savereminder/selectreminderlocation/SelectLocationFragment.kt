@@ -3,6 +3,7 @@ package com.udacity.project4.locationreminders.savereminder.selectreminderlocati
 
 import android.annotation.SuppressLint
 import android.annotation.TargetApi
+import android.content.Intent
 import android.content.IntentSender
 import android.content.res.Resources
 import android.os.Bundle
@@ -24,7 +25,6 @@ import com.google.maps.android.ktx.addMarker
 import com.google.maps.android.ktx.awaitMap
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
-import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.Permission
@@ -34,7 +34,6 @@ import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import kotlinx.coroutines.launch
 import logcat.logcat
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
-import java.util.*
 
 class SelectLocationFragment : BaseFragment() {
 
@@ -173,9 +172,14 @@ class SelectLocationFragment : BaseFragment() {
         locationSettingsResponseTask.addOnFailureListener { exception ->
             if (exception is ResolvableApiException && resolve) {
                 try {
-                    exception.startResolutionForResult(
-                        requireActivity(),
-                        REQUEST_TURN_ON_DEVICE_LOCATION
+                    startIntentSenderForResult(
+                        exception.resolution.intentSender,
+                        REQUEST_TURN_ON_DEVICE_LOCATION,
+                        null,
+                        0,
+                        0,
+                        0,
+                        null
                     )
                 } catch (sendEx: IntentSender.SendIntentException) {
                     logcat { "Error getting location settings resolution: $sendEx.asLog()" }
@@ -185,6 +189,13 @@ class SelectLocationFragment : BaseFragment() {
         locationSettingsResponseTask.addOnCompleteListener {
             map.isMyLocationEnabled = true
             getLocation()
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_TURN_ON_DEVICE_LOCATION) {
+            checkDeviceLocationSettings(false)
         }
     }
 
