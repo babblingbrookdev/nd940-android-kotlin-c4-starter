@@ -4,6 +4,7 @@ import android.app.Application
 import android.app.PendingIntent.getActivity
 import android.os.Bundle
 import android.view.View
+import androidx.fragment.app.testing.FragmentScenario
 import androidx.fragment.app.testing.launchFragmentInContainer
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
@@ -155,8 +156,8 @@ class RemindersActivityTest :
         scenario.onActivity {
             decorView = it.window.decorView
         }
+
         dataBindingIdlingResource.monitorActivity(scenario)
-        val navController = mock(NavController::class.java)
 
         onView(withId(R.id.addReminderFAB)).perform(click())
         onView(withId(R.id.selectLocation)).perform(click())
@@ -166,10 +167,7 @@ class RemindersActivityTest :
         closeSoftKeyboard()
         onView(withId(R.id.saveReminder)).perform(click())
 
-        // this test on toast fails on target sdk 30 and above with rootview exception open issue on android-test
-        // changing to snackbar..
-        //onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not((decorView)))).check(matches(isDisplayed()))
-        onView(withText(R.string.reminder_saved)).check(matches(isDisplayed()))
+        onView(withText(R.string.reminder_saved)).inRoot(withDecorView(not(`is`(decorView)))).check(matches(isDisplayed()))
         scenario.close()
     }
 }
