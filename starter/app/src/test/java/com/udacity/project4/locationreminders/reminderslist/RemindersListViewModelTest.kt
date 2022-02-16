@@ -64,6 +64,14 @@ class RemindersListViewModelTest {
     }
 
     @Test
+    fun loadRemindersWithErrorTest() = runBlockingTest {
+        fakeReminderDataSource.setReturnError(true)
+        viewModel.loadReminders()
+
+        assertThat(viewModel.showSnackBar.getOrAwaitValue().equals("Test Exception"))
+    }
+
+    @Test
     fun testShowNoDataIsFalseWithData() = runBlockingTest {
         viewModel.loadReminders()
 

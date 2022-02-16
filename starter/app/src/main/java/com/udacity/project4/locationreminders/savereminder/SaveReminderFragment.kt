@@ -4,14 +4,14 @@ import android.annotation.SuppressLint
 import android.annotation.TargetApi
 import android.app.PendingIntent
 import android.content.Intent
+import android.content.IntentSender
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
-import com.google.android.gms.location.Geofence
-import com.google.android.gms.location.GeofencingClient
-import com.google.android.gms.location.GeofencingRequest
+import com.google.android.gms.common.api.ResolvableApiException
+import com.google.android.gms.location.*
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseFragment
 import com.udacity.project4.base.NavigationCommand
@@ -21,6 +21,7 @@ import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.Permission
 import com.udacity.project4.utils.PermissionManager
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
+import logcat.logcat
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 
 @SuppressLint("UnspecifiedImmutableFlag")
@@ -117,11 +118,40 @@ class SaveReminderFragment : BaseFragment() {
                 .rationale(getString(R.string.permission_denied_explanation))
                 .checkPermission { granted ->
                     if (granted) {
-                        addGeofence(_viewModel.getReminder())
+                        checkDeviceLocationSettings()
                     } else {
                         _viewModel.showSnackBarInt.value = R.string.location_required_error
                     }
                 }
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun checkDeviceLocationSettings(resolve: Boolean = true) {
+        val locationRequest = LocationRequest.create().apply {
+            priority = LocationRequest.PRIORITY_LOW_POWER
+        }
+        val builder = LocationSettingsRequest.Builder().addLocationRequest(locationRequest)
+
+        val settingsClient = LocationServices.getSettingsClient(requireActivity())
+        val locationSettingsResponseTask = settingsClient.checkLocationSettings(builder.build())
+
+        locationSettingsResponseTask.addOnFailureListener { exception ->
+            if (exception is ResolvableApiException && resolve) {
+                try {
+                    exception.startResolutionForResult(
+                        requireActivity(),
+                        REQUEST_TURN_ON_DEVICE_LOCATION
+                    )
+                } catch (sendEx: IntentSender.SendIntentException) {
+                    logcat { "Error getting location settings resolution: $sendEx.asLog()" }
+                }
+            }
+        }
+        locationSettingsResponseTask.addOnCompleteListener {
+            if (it.isSuccessful) {
+                addGeofence(_viewModel.getReminder())
+            }
         }
     }
 
@@ -131,3 +161,5 @@ class SaveReminderFragment : BaseFragment() {
         _viewModel.onClear()
     }
 }
+
+private const val REQUEST_TURN_ON_DEVICE_LOCATION = 1

@@ -134,6 +134,7 @@ class ReminderListFragmentTest : KoinTest {
         dataBindingIdlingResource.monitorFragment(scenario)
 
         onView(withId(R.id.noDataTextView)).check(matches(isDisplayed()))
+        scenario.close()
     }
 
     @Test
@@ -148,6 +149,7 @@ class ReminderListFragmentTest : KoinTest {
         onView(withId(R.id.addReminderFAB)).perform(click())
 
         verify(navController).navigate(ReminderListFragmentDirections.toSaveReminder())
+        scenario.close()
     }
 
     @Test
@@ -171,6 +173,7 @@ class ReminderListFragmentTest : KoinTest {
         onView(withId(R.id.title)).check(matches(withText("Test title")))
         onView(withId(R.id.description)).check(matches(withText("Test description")))
         onView(withId(R.id.location)).check(matches(withText("Test location")))
+        scenario.close()
     }
 
     @Test
@@ -180,6 +183,7 @@ class ReminderListFragmentTest : KoinTest {
 
         onView(withId(R.id.saveReminder)).perform(click())
         onView(withText(appContext.getString(R.string.err_enter_title))).check(matches(isDisplayed()))
+        scenario.close()
     }
 
     @Test
@@ -191,5 +195,6 @@ class ReminderListFragmentTest : KoinTest {
         closeSoftKeyboard()
         onView(withId(R.id.saveReminder)).perform(click())
         onView(withText(appContext.getString(R.string.err_select_location))).check(matches(isDisplayed()))
+        scenario.close()
     }
 }
