@@ -5,6 +5,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.PointOfInterest
 import com.udacity.project4.R
 import com.udacity.project4.base.BaseViewModel
@@ -12,7 +13,9 @@ import com.udacity.project4.base.NavigationCommand
 import com.udacity.project4.locationreminders.data.ReminderDataSource
 import com.udacity.project4.locationreminders.data.dto.ReminderDTO
 import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
+import com.udacity.project4.utils.getSnippet
 import kotlinx.coroutines.launch
+import java.util.*
 
 class SaveReminderViewModel(val app: Application, private val dataSource: ReminderDataSource) :
     BaseViewModel(app) {
@@ -27,11 +30,15 @@ class SaveReminderViewModel(val app: Application, private val dataSource: Remind
     private val _selectedPOI = MutableLiveData<PointOfInterest?>()
     val selectedPOI: LiveData<PointOfInterest?> get() = _selectedPOI
 
+    private val _mapSelection = MutableLiveData<LatLng?>()
+    val mapSelection: LiveData<LatLng?> get() = _mapSelection
+
     /**
      * Clear the live data objects to start fresh next time the view model gets called
      */
     fun onClear() {
         _selectedPOI.value = null
+        _mapSelection.value = null
         reminderTitle.value = null
         reminderDescription.value = null
         reminderSelectedLocationStr.value = null
@@ -87,9 +94,18 @@ class SaveReminderViewModel(val app: Application, private val dataSource: Remind
 
     fun onPoiSelected(poi: PointOfInterest) {
         _selectedPOI.value = poi
+        _mapSelection.value = null
         reminderSelectedLocationStr.value = poi.name
         latitude.value = poi.latLng.latitude
         longitude.value = poi.latLng.longitude
+    }
+
+    fun onMapSelected(latLng: LatLng) {
+        _mapSelection.value = latLng
+        _selectedPOI.value = null
+        reminderSelectedLocationStr.value = latLng.getSnippet()
+        latitude.value = latLng.latitude
+        longitude.value = latLng.longitude
     }
 
     fun navigateBack() {

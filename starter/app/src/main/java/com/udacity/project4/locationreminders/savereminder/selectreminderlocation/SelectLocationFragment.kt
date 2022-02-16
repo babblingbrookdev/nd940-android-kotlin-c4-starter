@@ -29,10 +29,12 @@ import com.udacity.project4.databinding.FragmentSelectLocationBinding
 import com.udacity.project4.locationreminders.savereminder.SaveReminderViewModel
 import com.udacity.project4.utils.Permission
 import com.udacity.project4.utils.PermissionManager
+import com.udacity.project4.utils.getSnippet
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
 import kotlinx.coroutines.launch
 import logcat.logcat
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
+import java.util.*
 
 class SelectLocationFragment : BaseFragment() {
 
@@ -80,18 +82,26 @@ class SelectLocationFragment : BaseFragment() {
     }
 
     private fun setupListeners() {
+        map.setOnMapClickListener { latLng ->
+            _viewModel.onMapSelected(latLng)
+        }
         map.setOnPoiClickListener { poi ->
             _viewModel.onPoiSelected(poi)
         }
         binding.saveButton.setOnClickListener {
-            requestBackgroundPermissions()
+            _viewModel.navigateBack()
         }
     }
 
     private fun setupObservers() {
         _viewModel.selectedPOI.observe(viewLifecycleOwner) { poi ->
             poi?.let {
-                addMarker(it)
+                addPoiMarker(it)
+            }
+        }
+        _viewModel.mapSelection.observe(viewLifecycleOwner) { click ->
+            click?.let {
+                addMarker(click)
             }
         }
     }
@@ -150,21 +160,6 @@ class SelectLocationFragment : BaseFragment() {
             }
     }
 
-    @TargetApi(29)
-    private fun requestBackgroundPermissions() {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
-            permissionManager.request(Permission.BackgroundLocation)
-                .rationale(getString(R.string.permission_denied_explanation))
-                .checkPermission { granted ->
-                    if (granted) {
-                        _viewModel.navigationCommand.value = NavigationCommand.Back
-                    } else {
-                        _viewModel.showSnackBarInt.value = R.string.location_required_error
-                    }
-                }
-        }
-    }
-
     @SuppressLint("MissingPermission")
     private fun checkDeviceLocationSettings(resolve: Boolean = true) {
         val locationRequest = LocationRequest.create().apply {
@@ -218,13 +213,25 @@ class SelectLocationFragment : BaseFragment() {
         }
     }
 
-    private fun addMarker(selectedPoi: PointOfInterest) {
+    private fun addMarker(latLng: LatLng) {
         mapMarker?.remove()
         mapMarker = map.addMarker {
-            title(selectedPoi.name)
-            position(selectedPoi.latLng)
+            position(latLng)
+            snippet(latLng.getSnippet())
         }
-        moveCamera(selectedPoi.latLng)
+        moveCamera(latLng)
+        mapMarker?.showInfoWindow()
+    }
+
+    private fun addPoiMarker(poi: PointOfInterest) {
+        mapMarker?.remove()
+        mapMarker = map.addMarker {
+            title(poi.name)
+            position(poi.latLng)
+            snippet(poi.latLng.getSnippet())
+        }
+        moveCamera(poi.latLng)
+        mapMarker?.showInfoWindow()
     }
 
     private fun moveCamera(latLng: LatLng) {

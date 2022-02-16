@@ -1,6 +1,7 @@
 package com.udacity.project4.locationreminders.savereminder
 
 import android.annotation.SuppressLint
+import android.annotation.TargetApi
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
@@ -20,7 +21,6 @@ import com.udacity.project4.locationreminders.reminderslist.ReminderDataItem
 import com.udacity.project4.utils.Permission
 import com.udacity.project4.utils.PermissionManager
 import com.udacity.project4.utils.setDisplayHomeAsUpEnabled
-import logcat.logcat
 import org.koin.androidx.viewmodel.ext.android.sharedViewModel
 
 @SuppressLint("UnspecifiedImmutableFlag")
@@ -78,40 +78,47 @@ class SaveReminderFragment : BaseFragment() {
 
         binding.saveReminder.setOnClickListener {
             if (_viewModel.validateEnteredData()) {
-                addGeofence(_viewModel.getReminder())
+                requestBackgroundPermissions()
             }
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun addGeofence(reminder: ReminderDataItem?) {
         reminder?.let {
-            permissionManager.request(Permission.ForegroundLocation)
+            val geofence =
+                Geofence.Builder()
+                    .setRequestId(reminder.id)
+                    .setCircularRegion(reminder.latitude!!, reminder.longitude!!, 300f)
+                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
+                    .build()
+
+            val request = GeofencingRequest.Builder().apply {
+                setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
+                    .addGeofence(geofence)
+            }.build()
+            geofencingClient.addGeofences(request, geofencePendingIntent).run {
+                addOnSuccessListener {
+                    _viewModel.saveReminder()
+                }
+                addOnFailureListener {
+                    _viewModel.showSnackBarInt.value =
+                        R.string.error_adding_geofence
+                }
+            }
+        }
+    }
+
+    @TargetApi(29)
+    private fun requestBackgroundPermissions() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            permissionManager.request(Permission.BackgroundLocation)
                 .rationale(getString(R.string.permission_denied_explanation))
                 .checkPermission { granted ->
                     if (granted) {
-                        val geofence =
-                            Geofence.Builder()
-                                .setRequestId(reminder.id)
-                                .setCircularRegion(reminder.latitude!!, reminder.longitude!!, 300f)
-                                .setExpirationDuration(Geofence.NEVER_EXPIRE)
-                                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                                .build()
-
-                        val request = GeofencingRequest.Builder().apply {
-                            setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-                                .addGeofence(geofence)
-                        }.build()
-                        geofencingClient.addGeofences(request, geofencePendingIntent).run {
-                            addOnSuccessListener {
-                                _viewModel.saveReminder()
-                            }
-                            addOnFailureListener {
-                                _viewModel.showSnackBarInt.value =
-                                    R.string.error_adding_geofence
-                            }
-                        }
+                        addGeofence(_viewModel.getReminder())
                     } else {
-                        logcat { "No permissions to add geofence" }
                         _viewModel.showSnackBarInt.value = R.string.location_required_error
                     }
                 }
