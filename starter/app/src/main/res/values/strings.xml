@@ -33,6 +33,9 @@
     <string name="welcome">Welcome</string>
     <string name="err_enter_title">Please enter title</string>
     <string name="err_select_location">Please select location</string>
+    <string name="title_label">Title: %1$s</string>
+    <string name="description_label">Description: %1$s</string>
+    <string name="location_label">Location: %1$s</string>
 
     <!-- permission rationale dialog strings -->
     <string name="dialog_permission_title">Permissions needed</string>
